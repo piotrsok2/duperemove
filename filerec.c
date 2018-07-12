@@ -423,7 +423,8 @@ int filerec_open(struct filerec *file, int write)
 				ret, strerror(ret), file->filename, write);
 			goto out_unlock;
 		}
-
+		
+		posix_fadvise(fd, 0, 0, POSIX_FADV_SEQUENTIAL);
 		file->fd = fd;
 	}
 	file->fd_refs++;
