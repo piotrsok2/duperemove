@@ -585,7 +585,6 @@ static inline int csum_next_block(struct csum_block *data, uint64_t *off,
 				  struct fiemap_ctxt **in_fc)
 {
 	struct fiemap_ctxt *fc = NULL;
-	ssize_t stored_bytes = data->bytes;
 	ssize_t bytes_read;
 	int ret = 0;
 	unsigned int hole;
