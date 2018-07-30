@@ -425,7 +425,7 @@ int filerec_open(struct filerec *file, int write)
 		}
 
 		file->fd = fd;
-		readahead(fd, 0, lseek(fd, 0, SEEK_END));
+		readahead(fd, 0, file->size);
 	}
 	file->fd_refs++;
 out_unlock:
