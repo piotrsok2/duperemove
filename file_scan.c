@@ -594,8 +594,11 @@ static inline int csum_next_block(struct csum_block *data, uint64_t *off,
 	if (in_fc)
 		fc = *in_fc;
 
-	bytes_read = read(data->file->fd, data->buf + stored_bytes,
-				blocksize - stored_bytes);
+	data->buf = data->file->addr + *off;
+	bytes_read = data->file->size - *off;
+	if ( bytes_read > blocksize )
+		bytes_read = blocksize;
+
 	if (bytes_read < 0) {
 		ret = errno;
 		fprintf(stderr, "Unable to read file %s: %s\n",
@@ -685,8 +688,6 @@ static void csum_whole_file(struct filerec *file,
 	struct csum_block curr_block;
 	struct sqlite3 *db = NULL;
 
-	curr_block.buf = malloc(blocksize);
-	assert(curr_block.buf != NULL);
 	curr_block.file = file;
 	curr_block.bytes = 0;
 
@@ -785,7 +786,6 @@ static void csum_whole_file(struct filerec *file,
 	file->flags |= FILEREC_IN_DB;
 
 	filerec_close(file);
-	free(curr_block.buf);
 	if (fc)
 		free(fc);
 
@@ -795,7 +795,6 @@ static void csum_whole_file(struct filerec *file,
 err:
 	filerec_close(file);
 err_noclose:
-	free(curr_block.buf);
 	if (hashes)
 		free(hashes);
 	if (fc)

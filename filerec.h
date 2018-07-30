@@ -30,6 +30,7 @@ extern unsigned int dedupe_seq; /* This is incremented on every dedupe pass */
 
 struct filerec {
 	int		fd;			/* file descriptor */
+	char* addr;			/* address of file mapping */
 	unsigned int	fd_refs;			/* fd refcount */
 
 	unsigned int		flags; /* defined below this struct */

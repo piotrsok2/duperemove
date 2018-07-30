@@ -18,6 +18,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <stdio.h>
@@ -407,6 +408,7 @@ int filerec_open(struct filerec *file, int write)
 	int ret = 0;
 	int flags = O_RDONLY;
 	int fd;
+	char *addr;
 
 	if (write)
 		flags = O_RDWR;
@@ -425,6 +427,18 @@ int filerec_open(struct filerec *file, int write)
 		}
 
 		file->fd = fd;
+
+		addr = mmap(NULL, file->size, PROT_READ, MAP_PRIVATE, fd, 0);
+		if (addr == MAP_FAILED)
+		{
+			ret = errno;
+			fprintf(stderr, "Error %d: %s while mapping \"%s\" "
+				"(write=%d)\n",
+				ret, strerror(ret), file->filename, write);
+			goto out_unlock;
+		}
+		madvise(addr, file->size, MADV_SEQUENTIAL);
+		file->addr=addr;
 	}
 	file->fd_refs++;
 out_unlock:
@@ -442,6 +456,7 @@ void filerec_close(struct filerec *file)
 	file->fd_refs--;
 
 	if (file->fd_refs == 0) {
+		munmap(file->addr, file->size);
 		close(file->fd);
 		file->fd = -1;
 	}
